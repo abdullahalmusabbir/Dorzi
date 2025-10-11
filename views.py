@@ -608,3 +608,80 @@ def customer(request):
         'favorite_tailors_count': favorite_tailors_count,
         'products': products
     })
+
+@login_required
+def addEmbroidery(request):
+    if request.method == 'POST':
+        try:
+            # Get the current tailor
+            tailor = Tailor.objects.get(user=request.user)
+            
+            # Create the Embroidery object
+            embroidery = Embroidery.objects.create(
+                tailor=tailor,
+                title=request.POST.get('title'),
+                description=request.POST.get('description', ''),
+                price=request.POST.get('price', 0.0),
+                fabric_type=request.POST.get('fabric_type', ''),
+                thread_type=request.POST.get('thread_type', ''),
+                color=request.POST.get('color', ''),
+                complexity_level=request.POST.get('complexity_level', 'simple'),
+            )
+            
+            # Handle estimated time (convert hours to timedelta)
+            estimated_time_hours = request.POST.get('estimated_time')
+            if estimated_time_hours:
+                embroidery.estimated_time = timedelta(hours=int(estimated_time_hours))
+            
+            # Handle image upload
+            design_image = request.FILES.get('design_image')
+            if design_image:
+                embroidery.design_image = design_image
+            
+            embroidery.save()
+            
+            messages.success(request, "Embroidery design added successfully!")
+            return redirect('tailor_dashboard')
+            
+        except Exception as e:
+            messages.error(request, f"Error adding embroidery design: {str(e)}")
+            return redirect('addEmbroidery')
+    
+    # If GET request, show the form
+    return render(request, 'addEmbroidery.html')    
+
+@login_required
+def get_embroidery_details(request, embroidery_id):
+    try:
+        # Get the embroidery design
+        embroidery = Embroidery.objects.get(id=embroidery_id)
+        
+        # Check if the current user owns this embroidery design
+        if embroidery.tailor.user != request.user:
+            return JsonResponse({'success': False, 'error': 'You do not have permission to view this embroidery design.'})
+        
+        # Prepare response data
+        data = {
+            'success': True,
+            'embroidery': {
+                'id': embroidery.id,
+                'title': embroidery.title,
+                'description': embroidery.description,
+                'price': str(embroidery.price),
+                'fabric_type': embroidery.fabric_type,
+                'thread_type': embroidery.thread_type,
+                'color': embroidery.color,
+                'complexity_level': embroidery.complexity_level,
+                'estimated_time': str(embroidery.estimated_time) if embroidery.estimated_time else None,
+                'design_image': request.build_absolute_uri(embroidery.design_image.url) if embroidery.design_image else None,
+                'created_at': embroidery.created_at.isoformat(),
+                'updated_at': embroidery.updated_at.isoformat(),
+            }
+        }
+        
+        return JsonResponse(data)
+        
+    except Embroidery.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Embroidery design not found.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
