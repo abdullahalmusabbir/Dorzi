@@ -415,3 +415,12 @@ def get_dress_details(request, product_id):
         return JsonResponse({'success': False, 'error': 'Product not found.'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
+
+def createreviews(request):
+    return render(request, 'createreviews.html')
+
+def deletereviews(request):
+    return render(request, 'deletereviews.html')
+
+def updatereviews(request):
+    return render(request, 'updatereviews.html')
