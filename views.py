@@ -220,3 +220,103 @@ def create_order(request):
     
     # If not POST request, redirect to pre_designed page
     return redirect('pre_designed')
+
+def tailor_signup(request):
+    if request.method == 'POST':
+        # Get form data
+        full_name = request.POST.get('full_name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        business_name = request.POST.get('business_name')
+        specialization = request.POST.get('specialization')
+        experience = request.POST.get('experience')
+        business_location = request.POST.get('business_location')
+        nid_number = request.POST.get('nid_number')
+        profile_picture = request.FILES.get('profile_picture')
+        tailor_about = request.POST.get('tailor_about')
+        business_description = request.POST.get('business_description')
+        address = request.POST.get('address')
+        
+        # Validate passwords match
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match!")
+            return redirect('user_signup')
+            
+        # Check if user already exists
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "Email already exists!")
+            return redirect('user_signup')
+            
+        try:
+            # Create User
+            user = User.objects.create_user(
+                username=email,
+                email=email,
+                password=password,
+                first_name=full_name.split()[0] if full_name else '',
+                last_name=' '.join(full_name.split()[1:]) if len(full_name.split()) > 1 else ''
+            )
+            
+            # Create Tailor
+            tailor = Tailor.objects.create(
+                user=user,
+                business_name=business_name,
+                business_location=business_location,
+                phone=phone,
+                NID=nid_number,
+                profile_picture=profile_picture,
+                services_offered=specialization,
+                expertise=experience,
+                category=specialization,
+                average_rating=0.0,
+                is_available=True,
+                tailor_about=tailor_about,
+                business_description=business_description,
+                address=address
+            )
+            
+            # Log the user in
+            auth_login(request, user)
+            messages.success(request, "Tailor account created successfully!")
+            return redirect('home')
+            
+        except Exception as e:
+            messages.error(request, f"Error creating account: {str(e)}")
+            return redirect('user_signup')
+    
+    return render(request, 'signup.html')
+
+def tailor_login(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')  # This should be the email
+        password = request.POST.get('password')
+        remember_me = request.POST.get('remember_me')
+
+        # Authenticate the user
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
+            # Check if user has a tailor profile
+            if hasattr(user, 'tailor'):
+                auth_login(request, user)
+                
+                # Set session expiry based on remember me
+                if remember_me:
+                    # Session will expire after 2 weeks (remember me checked)
+                    request.session.set_expiry(1209600)  # 2 weeks in seconds
+                else:
+                    # Session will expire when browser is closed (remember me not checked)
+                    request.session.set_expiry(0)
+                
+                messages.success(request, "You have successfully logged in as a tailor!")
+                return redirect('tailor_dashboard')
+            else:
+                messages.error(request, "This account is not registered as a tailor!")
+                return redirect('user_login')
+        else:
+            messages.error(request, "Invalid email or password!")
+            return redirect('user_login')
+    
+    return render(request, 'user_login.html')
