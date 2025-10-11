@@ -320,3 +320,98 @@ def tailor_login(request):
             return redirect('user_login')
     
     return render(request, 'user_login.html')
+
+@login_required
+def addDress(request):
+    if request.method == 'POST':
+        try:
+            # Debugging: Check if request is reaching here
+            print("AddDress POST request received")
+            print("POST data:", request.POST)
+            print("FILES:", request.FILES)
+            
+            # Get the current tailor
+            tailor = Tailor.objects.get(user=request.user)
+            print("Tailor found:", tailor)
+            
+            # Create the PreDesigned object
+            dress = PreDesigned.objects.create(
+                tailor=tailor,
+                title=request.POST.get('title'),
+                description=request.POST.get('description', ''),
+                availability=int(request.POST.get('availability', 0)),
+                price=Decimal(request.POST.get('price', 0.0)),
+                category=request.POST.get('category', ''),
+                fabric_type=request.POST.get('fabric_type', ''),
+                thread_type=request.POST.get('thread_type', ''),
+                color=request.POST.get('color', ''),
+                gender=request.POST.get('gender', '')
+            )
+            
+            # Handle estimated time
+            estimated_time = request.POST.get('estimated_time')
+            if estimated_time and estimated_time.isdigit():
+                dress.estimated_time = timedelta(hours=int(estimated_time))
+            
+            dress.save()
+            print("Dress object created:", dress.id)
+            
+            # Handle multiple image uploads
+            images = request.FILES.getlist('images')
+            print("Images received:", len(images))
+            
+            for image in images:
+                Image.objects.create(predesigned=dress, image=image)
+                print("Image saved:", image.name)
+            
+            messages.success(request, "Dress added successfully!")
+            return redirect('tailor_dashboard')
+            
+        except Exception as e:
+            print("Error in addDress:", str(e))
+            messages.error(request, f"Error adding dress: {str(e)}")
+            return redirect('tailor_dashboard')  # Redirect back to dashboard
+    
+    # If GET request, this shouldn't happen from modal
+    messages.error(request, "Invalid request method")
+    return redirect('tailor_dashboard')
+
+@login_required
+def get_dress_details(request, product_id):
+    try:
+        # Get the product
+        product = PreDesigned.objects.get(id=product_id)
+        
+        # Check if the current user owns this product
+        if product.tailor.user != request.user:
+            return JsonResponse({'success': False, 'error': 'You do not have permission to view this product.'})
+        
+        # Get all images for this product
+        images = [request.build_absolute_uri(image.image.url) for image in product.images.all()]
+        
+        # Prepare response data
+        data = {
+            'success': True,
+            'product': {
+                'id': product.id,
+                'title': product.title,
+                'description': product.description,
+                'price': str(product.price),
+                'category': product.category,
+                'availability': product.availability,
+                'fabric_type': product.fabric_type,
+                'thread_type': product.thread_type,
+                'color': product.color,
+                'estimated_time': str(product.estimated_time) if product.estimated_time else None,
+                'created_at': product.created_at.isoformat(),
+                'updated_at': product.updated_at.isoformat(),
+            },
+            'images': images
+        }
+        
+        return JsonResponse(data)
+        
+    except PreDesigned.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Product not found.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
