@@ -153,3 +153,70 @@ def create_custom_orders(request, tailor_id):
     # If GET request, redirect back to findTailor page
     return redirect('findTailor')
   
+@login_required
+def create_order(request):
+    if request.method == 'POST':
+        try:
+            # Get form data
+            product_id = request.POST.get('product_id')
+            tailor_id = request.POST.get('tailor_id')
+            quantity = int(request.POST.get('quantity', 1))
+            price = Decimal(request.POST.get('price', 0))
+            size = request.POST.get('size', 'S')
+            full_name = request.POST.get('full_name')
+            phone = request.POST.get('phone')
+            address = request.POST.get('address')
+            special_instructions = request.POST.get('special_instructions', '')
+            
+            # Validate required fields
+            if not all([product_id, tailor_id, full_name, phone, address]):
+                messages.error(request, "Please fill in all required fields.")
+                return redirect('pre_designed')
+            
+            # Validate quantity and price
+            if quantity <= 0:
+                messages.error(request, "Quantity must be at least 1.")
+                return redirect('pre_designed')
+            
+            if price <= 0:
+                messages.error(request, "Invalid price.")
+                return redirect('pre_designed')
+            
+            # Get objects with error handling
+            try:
+                product = PreDesigned.objects.get(id=product_id)
+                tailor = Tailor.objects.get(id=tailor_id)
+            except PreDesigned.DoesNotExist:
+                messages.error(request, "Selected product does not exist.")
+                return redirect('pre_designed')
+            except Tailor.DoesNotExist:
+                messages.error(request, "Selected tailor does not exist.")
+                return redirect('pre_designed')
+            
+            # Create the order
+            order = Order.objects.create(
+                customer=request.user,
+                tailor=tailor,
+                product=product,
+                quantity=quantity,
+                price=price,
+                address=address,
+                number=phone,
+                size=size,
+                category=product.category,
+                special_instructions=special_instructions,
+                delivery_date=timezone.now() + timedelta(days=10)  # 10 days from now
+            )
+            
+            messages.success(request, f"Order placed successfully! Your order ID is #{order.id}")
+            return redirect('customer')
+            
+        except ValueError as e:
+            messages.error(request, f"Invalid input: {str(e)}")
+            return redirect('pre_designed')
+        except Exception as e:
+            messages.error(request, f"Error creating order: {str(e)}")
+            return redirect('pre_designed')
+    
+    # If not POST request, redirect to pre_designed page
+    return redirect('pre_designed')
