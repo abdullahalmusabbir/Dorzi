@@ -685,3 +685,34 @@ def get_embroidery_details(request, embroidery_id):
         return JsonResponse({'success': False, 'error': 'Embroidery design not found.'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
+
+@require_POST
+@login_required
+def toggle_favorite(request, tailor_id):
+    try:
+        tailor = Tailor.objects.get(id=tailor_id)
+        customer = request.user.customer
+        
+        # Check if already favorited
+        try:
+            favorite = FavoriteTailor.objects.get(user=customer, tailor=tailor)
+            # If it exists, remove it (toggle off)
+            favorite.delete()
+            return JsonResponse({'status': 'removed', 'tailor_id': tailor_id})
+        except FavoriteTailor.DoesNotExist:
+            # If it doesn't exist, create it (toggle on)
+            FavoriteTailor.objects.create(user=customer, tailor=tailor)
+            return JsonResponse({'status': 'added', 'tailor_id': tailor_id})
+            
+    except Tailor.DoesNotExist:
+        return JsonResponse({'error': 'Tailor not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+def favorite_tailors(request):
+    if not request.user.is_authenticated:
+        # Redirect to login or show empty state
+        return render(request, 'favorites.html', {'favorites': []})
+    
+    favorites = FavoriteTailor.objects.filter(user=request.user.customer).select_related('tailor')
+    return render(request, 'favorites.html', {'favorites': favorites})
