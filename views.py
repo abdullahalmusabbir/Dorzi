@@ -424,3 +424,187 @@ def deletereviews(request):
 
 def updatereviews(request):
     return render(request, 'updatereviews.html')
+
+def signup(request):
+    if request.method == 'POST':
+        full_name = request.POST.get('full_name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        address = request.POST.get('address')
+        
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match!")
+            return redirect('user_signup')
+            
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "Email already exists!")
+            return redirect('user_signup')
+            
+        try:
+            user = User.objects.create_user(
+                username=email,
+                email=email,
+                password=password,
+                first_name=full_name.split()[0] if full_name else '',
+                last_name=' '.join(full_name.split()[1:]) if len(full_name.split()) > 1 else ''
+            )
+            customer = Customer.objects.create(
+                user=user,
+                phone=phone,
+                address=address
+            )
+            
+            auth_login(request, user)
+            messages.success(request, "Account created successfully!")
+            return redirect('user_login')  
+            
+        except Exception as e:
+            messages.error(request, f"Error creating account: {str(e)}")
+            return redirect('user_signup')
+    
+    return render(request, 'signup.html')
+
+def logout(request):
+    auth_logout(request)
+    messages.success(request, "You have successfully logged out.")
+    return redirect('home')
+
+def user_login(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')  # This should be the email
+        password = request.POST.get('password')
+        remember_me = request.POST.get('remember_me')  # Optional remember me functionality
+
+        # Authenticate the user
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
+            # Login the user
+            auth_login(request, user)
+            
+            # Set session expiry based on remember me
+            if remember_me:
+                # Session will expire after 2 weeks (remember me checked)
+                request.session.set_expiry(1209600)  # 2 weeks in seconds
+            else:
+                # Session will expire when browser is closed (remember me not checked)
+                request.session.set_expiry(0)
+            
+            messages.success(request, "You have successfully logged in!")
+            
+            # Redirect to appropriate dashboard based on user type
+            if hasattr(user, 'tailor'):
+                return redirect('tailor_dashboard')
+            else:
+                return redirect('customer')
+        else:
+            messages.error(request, "Invalid email or password!")
+            return redirect('user_login')
+    
+    # If GET request, show login form
+    return render(request, 'user_login.html')
+
+def customer(request):
+    user = request.user
+    customer = Customer.objects.get(user=user)
+    products =  PreDesigned.objects.all()
+    torder = TOrders.objects.filter(customer=customer).order_by('-order_date')
+    dressorder = Order.objects.filter(customer=user).order_by('-order_date')
+    favorite_dresses = FavoriteDress.objects.filter(user=customer)
+    favorite_tailors = FavoriteTailor.objects.filter(user=customer)
+
+    all_orders = []
+    for order in torder:
+        if order.deliver is not None:
+            status = "Completed"
+        else:
+            status = "Pending"
+        all_orders.append({
+            'id': order.id,
+            'order_id': f"TORD-{order.id:03d}",
+            'garment': order.detailed_description or "Custom Garment",
+            'category': order.category or "Custom",
+            'tailor': order.tailor,
+            'delivery_date': order.delivery_date,
+            'status': order.status,
+            'order_type': "Custom Order",
+            'amount': order.get_total_price(),
+            'progress': None,  # This is the important field for custom orders
+            'timeline': order.status if hasattr(order, 'timeline') else {},
+            'order_date': order.order_date if hasattr(order, 'order_date') else None,
+            # Custom order specific fields
+            'fabric': order.fabrics if hasattr(order, 'fabrics') else '',
+            'color': getattr(order, 'color', ''),
+            'chest': order.chest,
+            'waist': order.waist,
+            'hip': order.hip,
+            'shoulder': order.shoulder,
+            'sleeve': order.sleeve,
+            'length': order.length,
+            'inseam': order.inseam,
+            'neck': order.neck,
+            'special_notes': order.special_requests if hasattr(order, 'special_requests') else '',
+            # Custom orders 
+            'measurements_confirmed': getattr(order, 'measurements_confirmed', None),
+            'fabric_selected': getattr(order, 'fabric_selected', None),
+            'cutting_started': getattr(order, 'cutting_started', None),
+            'stitching_started': getattr(order, 'stitching_started', None),
+            'deliver': getattr(order, 'deliver', None),
+        })
+    
+    # Process Pre-designed orders
+    for order in dressorder:
+        if order.deliver is not None:
+            status = "Completed"
+        else:
+            status = "Pending"
+        all_orders.append({
+            'id': order.id,
+            'order_id': f"DORD-{order.id:03d}",
+            'garment': order.product.title if order.product else "Pre-designed Garment",
+            'category': order.category or "Pre-designed",
+            'tailor': order.tailor,
+            'delivery_date': order.delivery_date,
+            'status': status,
+            'order_type': "Pre-designed",
+            'amount': order.get_total_price(),
+            'progress': None,
+            'timeline': order.status if hasattr(order, 'timeline') else {},
+            'order_date': order.order_date if hasattr(order, 'order_date') else None,
+            'size': order.size if hasattr(order, 'size') else None,
+            # Pre-designed order specific fields
+            'fabric': order.product.fabric_type if order.product else '',
+            'color': order.product.color if order.product else '',
+            'quantity': order.quantity,
+            'special_instructions': order.special_instructions if hasattr(order, 'special_instructions') else '',
+            # Pre-designed orders 
+            'order_confirmed': getattr(order, 'order_confirmed', None),
+            'production': getattr(order, 'production', None),
+            'quality_check': getattr(order, 'quality_check', None),
+            'deliver': getattr(order, 'deliver', None),
+        })
+    
+    # Sort by delivery_date safely
+    all_orders.sort(key=lambda x: x['delivery_date'] if x['delivery_date'] else datetime.min, reverse=True)
+    
+    # Stats
+    total_orders = len(all_orders)
+    completed_orders = len([order for order in all_orders if order['status'].lower() == 'delivered'])
+    pending_orders = len(all_orders) - completed_orders
+    favorite_tailors_count = favorite_tailors.count()
+    
+    return render(request, 'customer.html', {
+        'customer': customer,
+        'torder': torder,
+        'dressorder': dressorder,
+        'favorite_dresses': favorite_dresses,
+        'favorite_tailors': favorite_tailors,
+        'all_orders': all_orders,
+        'total_orders': total_orders,
+        'completed_orders': completed_orders,
+        'pending_orders': pending_orders,
+        'favorite_tailors_count': favorite_tailors_count,
+        'products': products
+    })
