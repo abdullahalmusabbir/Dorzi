@@ -63,6 +63,10 @@ def findTailor(request):
                                                'favorite_tailor_ids': favorite_tailor_ids,
                                                'fabrics': fabrics})
 
+def pre_designed(request):
+    products = PreDesigned.objects.all()
+    return render(request, 'pre_designed.html', {'products': products})
+
 @login_required
 def create_custom_orders(request, tailor_id):
     if request.method == 'POST':
