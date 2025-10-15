@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{% endblock %}
+
+{% block content %}
+  
+<main>
+        <!-- Hero Section -->
+        <section style="position: relative; width: 100%; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+
+            <!-- Slideshow Images -->
+            <div id="slideshow-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">
+                <img src="{% static 'images/(1).jpg' %}" class="slide-image active" style="position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 1; transition: opacity 1s ease-in-out;">
+                <img src="{% static 'images/(2).jpg' %}" class="slide-image" style="position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1s ease-in-out;">
+                <img src="{% static 'images/(3).jpg' %}" class="slide-image" style="position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1s ease-in-out;">
+            </div>
+        
+            <!-- Overlay Content -->
+            <div style="position: relative; z-index: 1; text-align: center; max-width: 700px; padding: 20px;">
+                <h1 style="font-size: 48px; font-weight: 800; color: white; margin-bottom: 20px; line-height: 1.2;">
+                    Find the Perfect <br>
+                    <span style="color: #c7d2fe;">Tailor Near You</span>
+                </h1>
+                <p style="font-size: 18px; color: #f1f5f9; margin-bottom: 30px;">
+                    Connect with expert tailors in Bangladesh for custom-made clothing and ready-to-wear collections.
+                    Get the perfect fit for your style.
+                </p>
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <a href="{% url 'findTailor' %}" style="background-color:rgba(7, 37, 227, 1); color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 16px;">Find Tailors</a>
+                    <a href="{% url 'findTailor' %}" style="background-color: #ffffffff; color:rgba(0, 0, 0, 1); padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 16px;">Custom Order</a>
+                </div>
+            </div>
+        
+            <!-- Slideshow Script -->
+            <script>
+                const slides = document.querySelectorAll(".slide-image");
+                let index = 0;
+        
+                setInterval(() => {
+                    slides[index].style.opacity = 0;
+                    slides[index].classList.remove("active");
+                    index = (index + 1) % slides.length;
+                    slides[index].style.opacity = 1;
+                    slides[index].classList.add("active");
+                }, 4000);
+            </script>
+        </section>
+
+        {% comment %} about order {% endcomment %}
+
+        <section style="padding: 60px 5%; background-color: #f9fafb; font-family: 'Segoe UI', sans-serif;">
+            <!-- Heading -->
+            <div style="text-align: center; margin-bottom: 50px;">
+                <h2 style="font-size: 32px; font-weight: 700; color: #111827;">Our Services</h2>
+                <p style="font-size: 16px; color: #6b7280;">From finding the perfect tailor to tracking your order, we make the entire<br>tailoring process seamless and transparent.</p>
+            </div>
+
+            <!-- Cards Container -->
+            <div style="display: flex; flex-wrap: wrap; gap: 30px; justify-content: space-between;">
+
+                <!-- Card 1 -->
+                <div style="flex: 1; min-width: 220px; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); text-align: left;">
+                <div style="margin-bottom: 20px;">
+                    <img src="{% static 'images/9.png' %}" alt="" style="border-radius: 8px;width: 60px; height: 60px; object-fit: contain;"> <!-- Add your image link here -->
+                </div>
+                <h3 style="margin-top: 15px; font-size: 18px; font-weight: 600; color: #1f2937;">Find Expert Tailors</h3>
+                <p style="font-size: 14px; color: #4b5563;">Search for tailors by location, specialization, and pricing. View profiles, reviews, and portfolios.</p>
+                <a href="{% url 'findTailor' %}" style="color: #2563eb; font-size: 14px; text-decoration: none;">Learn More →</a>
+                </div>
+
+                <!-- Card 2 -->
+                <div style="flex: 1; min-width: 220px; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); text-align: left;">
+                <div style="margin-bottom: 20px;">
+                    <img src="{% static 'images/10.png' %}" alt="Find Tailors Icon" style="border-radius: 8px; width: 60px; height: 60px; object-fit: contain;"> <!-- Add your image link here -->
+                </div>
+                <h3 style="margin-top: 15px; font-size: 18px; font-weight: 600; color: #1f2937;">Custom Clothing</h3>
+                <p style="font-size: 14px; color: #4b5563;">Order custom-made traditional wear like panjabi, salwar kameez, shirts, and formal wear.</p>
+                <a href="{% url 'pre_designed'%}" style="color: #2563eb; font-size: 14px; text-decoration: none;">Learn More →</a>
+                </div>
+
+                <!-- Card 3 -->
+                <div style="flex: 1; min-width: 220px; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); text-align: left;">
+                <div style="margin-bottom: 20px;">
+                    <img src="{% static 'images/11.png' %}" alt="Find Tailors Icon" style="border-radius: 8px; width: 60px; height: 60px; object-fit: contain;"> <!-- Add your image link here -->
+                </div>
+                <h3 style="margin-top: 15px; font-size: 18px; font-weight: 600; color: #1f2937;">Pre-Designed Collections</h3>
+                <p style="font-size: 14px; color: #4b5563;">Browse ready-made designs and place orders for quick delivery with professional tailoring.</p>
+                <a href="{% url 'pre_designed'%}" style="color: #2563eb; font-size: 14px; text-decoration: none;">Learn More →</a>
+                </div>
+
+                <!-- Card 4 -->
+                <div style="flex: 1; min-width: 220px; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); text-align: left;">
+                <div style="margin-bottom: 20px;">
+                    <img src="{% static 'images/12.png' %}" alt="Find Tailors Icon" style="border-radius: 8px; width: 60px; height: 60px; object-fit: contain;"> <!-- Add your image link here -->
+                </div>
+                <h3 style="margin-top: 15px; font-size: 18px; font-weight: 600; color: #1f2937;">Order Tracking</h3>
+                <p style="font-size: 14px; color: #4b5563;">Track your order progress in real-time from measurement to delivery with updates.</p>
+                <a href="" style="color: #2563eb; font-size: 14px; text-decoration: none;">Learn More →</a>
+                </div>
+
+            </div>
+        </section>
+
+
+
+
+
+
+  <!-- ===================  HOW TO WORK SECTION  =================== -->
+        <hr style="border: 0.5px solid gray; margin: 20px auto; width: 100%;">
+        <section style="padding: 60px 5%; background-color: #f9fafb; font-family: 'Segoe UI', sans-serif;">
+            <img src="{% static 'images/13.png' %}" alt="" style="width: 100%; max-width: 1400px; display: block;  border-radius: 12px;">
+        </section>    
+
+        <!-- Call to Action Section -->
+        <section style="background-color: #f8fafc; padding: 60px 20px; text-align: center; font-family: Arial, sans-serif;">
+            <div style="max-width: 800px; margin: 0 auto;">
+                <h2 style="font-size: 32px; color: #333; margin-bottom: 20px;">Ready to Get Started?</h2>
+                <p style="font-size: 18px; color: #666; line-height: 1.6; margin-bottom: 30px;">
+                    Join thousands of satisfied customers who have found their perfect tailor through Dorzi. 
+                    Experience quality tailoring with complete transparency and convenience.
+                </p>
+                
+                <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+                    <a href="{% url 'findTailor' %}" 
+                    style="background-color: #2563eb; color: white; padding: 12px 24px; 
+                            text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;
+                            transition: all 0.3s ease;
+                            display: inline-block;
+                            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);"
+                    onmouseover="this.style.backgroundColor='#1d4ed8'; this.style.boxShadow='0 4px 8px rgba(37, 99, 235, 0.3)';" 
+                    onmouseout="this.style.backgroundColor='#2563eb'; this.style.boxShadow='0 2px 4px rgba(37, 99, 235, 0.2)';">
+                    Find a Tailor
+                    </a>
+
+                    <a href="{% url 'tailor_signup' %}" 
+                    style="background-color: white; color: #2563eb; padding: 12px 24px; 
+                            text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;
+                            border: 2px solid #2563eb; transition: all 0.3s ease;
+                            display: inline-block;
+                            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1);"
+                    onmouseover="this.style.backgroundColor='#f0f5ff'; this.style.color='#1d4ed8'; this.style.borderColor='#1d4ed8'; this.style.boxShadow='0 4px 8px rgba(37, 99, 235, 0.2)';" 
+                    onmouseout="this.style.backgroundColor='white'; this.style.color='#2563eb'; this.style.borderColor='#2563eb'; this.style.boxShadow='0 2px 4px rgba(37, 99, 235, 0.1)';">
+                    Join as Tailor
+                    </a>
+                </div>
+            </div>
+        </section>
+</main>
+
+{% endblock %}
