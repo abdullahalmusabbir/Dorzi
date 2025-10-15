@@ -31,6 +31,38 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.views.decorators.http import require_POST
 
+def home(request):
+    products = PreDesigned.objects.all()
+    tailors = Tailor.objects.all()
+    embroidery = Embroidery.objects.all()
+    fabrics = Fabric.objects.all()
+    favorite_tailor_ids = []
+    if request.user.is_authenticated and hasattr(request.user, 'customer'):
+        favorite_tailors = FavoriteTailor.objects.filter(user=request.user.customer)
+        favorite_tailor_ids = [fav.tailor.id for fav in favorite_tailors]
+    return render(request, 'home.html', {'products': products, 
+                                         'tailors': tailors, 
+                                         'favorite_tailor_ids': favorite_tailor_ids, 
+                                         "fabrics": fabrics, 
+                                         "embroidery": embroidery})
+
+def findTailor(request):
+    tailors = Tailor.objects.all()
+    products = PreDesigned.objects.all()
+    reviews = Reviews.objects.all()
+    embroidery = Embroidery.objects.all()
+    fabrics = Fabric.objects.all() 
+    favorite_tailor_ids = []
+    if request.user.is_authenticated and hasattr(request.user, 'customer'):
+        favorite_tailors = FavoriteTailor.objects.filter(user=request.user.customer)
+        favorite_tailor_ids = [fav.tailor.id for fav in favorite_tailors]
+    return render(request, 'findTailor.html', {'tailors': tailors, 
+                                               'products': products, 
+                                               'reviews': reviews, 
+                                               'embroidery': embroidery, 
+                                               'favorite_tailor_ids': favorite_tailor_ids,
+                                               'fabrics': fabrics})
+
 @login_required
 def create_custom_orders(request, tailor_id):
     if request.method == 'POST':
