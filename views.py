@@ -67,6 +67,15 @@ def pre_designed(request):
     products = PreDesigned.objects.all()
     return render(request, 'pre_designed.html', {'products': products})
 
+def about(request):
+    return render(request, 'about.html')
+
+def terms(request):
+    return render(request, 'terms.html') 
+   
+def privacy(request):
+    return render(request, 'privacy.html')
+
 @login_required
 def create_custom_orders(request, tailor_id):
     if request.method == 'POST':
