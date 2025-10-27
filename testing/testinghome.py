@@ -12,7 +12,6 @@ from selenium.webdriver.chrome.service import Service
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from webdriver_manager.chrome import ChromeDriverManager
 
-# Setup Django environment
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dorzi.settings')
 try:
     django.setup()
@@ -26,10 +25,10 @@ class DorziCompleteTest(unittest.TestCase):
     def setUpClass(cls):
         """Setup once before all tests"""
         print("🚀 Initializing Dorzi Complete Test Suite...")
-        cls.base_url = "http://localhost:8000"  # Change to your server URL
+        cls.base_url = "http://localhost:8000" 
         cls.setup_driver()
         cls.wait = WebDriverWait(cls.driver, 15)
-        cls.total_start_time = time.time()  # Start measuring total execution time
+        cls.total_start_time = time.time()  
     
     @classmethod
     def tearDownClass(cls):
@@ -50,11 +49,7 @@ class DorziCompleteTest(unittest.TestCase):
         chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
         
-        # Uncomment for headless testing
-        # chrome_options.add_argument("--headless")
-        
         try:
-            # Automatic ChromeDriver management
             print("📥 Setting up ChromeDriver...")
             service = Service(ChromeDriverManager().install())
             cls.driver = webdriver.Chrome(service=service, options=chrome_options)
@@ -72,50 +67,34 @@ class DorziCompleteTest(unittest.TestCase):
         print("\n🔐 Logging in user...")
         
         try:
-            # Navigate to home page
             self.driver.get(self.base_url)
             time.sleep(2)
             
-            # Click login button
             login_btn = self.wait.until(
                 EC.element_to_be_clickable((By.XPATH, "//a[contains(text(), 'Login')]"))
             )
             login_btn.click()
-            
-            # Wait for modal to appear
             modal = self.wait.until(EC.visibility_of_element_located((By.ID, "loginModal")))
-            
-            # Fill login form
             email_field = self.driver.find_element(By.NAME, "username")
             password_field = self.driver.find_element(By.NAME, "password")
-            
-            # Enter credentials
             email_field.clear()
             email_field.send_keys("abdullahmusabbir703@gmail.com")
             
             password_field.clear()
             password_field.send_keys("Shuvo1996$")
-            
-            # Click login button
             login_submit_btn = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Login')]")
             login_submit_btn.click()
-            
-            # Wait for login to complete and redirect
             time.sleep(3)
-            
-            # Check if login was successful by looking for profile icon or logout button
             try:
                 profile_icon = self.driver.find_element(By.XPATH, "//img[@alt='User']")
                 print("✓ Login successful - User is logged in")
                 return True
             except NoSuchElementException:
-                # Check if there's an error message
                 try:
                     error_message = self.driver.find_element(By.XPATH, "//div[contains(@class, 'error')]")
                     print(f"❌ Login failed: {error_message.text}")
                     return False
                 except NoSuchElementException:
-                    # If no error message, check current URL to see if we're redirected
                     if "customer" in self.driver.current_url or "tailor" in self.driver.current_url:
                         print("✓ Login successful - Redirected to dashboard")
                         return True
@@ -184,15 +163,12 @@ class DorziCompleteTest(unittest.TestCase):
         start_time = time.time()
         
         try:
-            # Navigate to home page
             self.driver.get(self.base_url)
             time.sleep(2)
             
-            # Check page title
             self.assertIn("Dorzi", self.driver.title)
             print("✓ Page title is correct")
             
-            # Check navigation elements
             nav_elements = {
                 "Logo": "//a[contains(text(), 'DorZi')]",
                 "About Link": "//a[contains(text(), 'About')]",
@@ -226,11 +202,8 @@ class DorziCompleteTest(unittest.TestCase):
         start_time = time.time()
         
         try:
-            # Navigate to home page if not already there
             if "home" not in self.driver.current_url:
                 self.driver.get(self.base_url)
-            
-            # Check hero section elements
             hero_elements = {
                 "Main Heading": "//h1[contains(text(), 'Find the Perfect')]",
                 "Sub Heading": "//span[contains(text(), 'Tailor Near You')]",
@@ -244,7 +217,6 @@ class DorziCompleteTest(unittest.TestCase):
                 self.assertTrue(element.is_displayed())
                 print(f"✓ {element_name} is displayed")
             
-            # Check slideshow
             slideshow_container = self.driver.find_element(By.ID, "slideshow-container")
             self.assertTrue(slideshow_container.is_displayed())
             
@@ -252,13 +224,11 @@ class DorziCompleteTest(unittest.TestCase):
             self.assertGreater(len(slide_images), 0, "No slide images found")
             print(f"✓ Slideshow found with {len(slide_images)} images")
             
-            # Test button functionality
             find_tailors_btn = self.driver.find_element(By.XPATH, "//a[contains(text(), 'Find Tailors')]")
             find_tailors_btn.click()
             self.wait.until(EC.url_contains("findTailor"))
             print("✓ Find Tailors button navigates correctly")
             
-            # Go back to home
             self.driver.back()
             self.wait.until(EC.url_contains("home") or self.driver.current_url == self.base_url + "/")
             
@@ -282,25 +252,21 @@ class DorziCompleteTest(unittest.TestCase):
         start_time = time.time()
         
         try:
-            # Scroll to services section
             self.driver.execute_script("window.scrollTo(0, 600);")
             time.sleep(2)
             
-            # Check services heading
             services_heading = self.wait.until(
                 EC.presence_of_element_located((By.XPATH, "//h2[contains(text(), 'Our Services')]"))
             )
             self.assertTrue(services_heading.is_displayed())
             print("✓ Services heading is displayed")
             
-            # Check service cards
             service_cards = self.driver.find_elements(
                 By.XPATH, "//section[contains(@style, 'background-color: #f9fafb')]//div[contains(@style, 'background: white')]"
             )
             self.assertGreaterEqual(len(service_cards), 4, "Expected at least 4 service cards")
             print(f"✓ Found {len(service_cards)} service cards")
             
-            # Verify card content
             expected_services = ["Find Expert Tailors", "Custom Clothing", "Pre-Designed Collections", "Order Tracking"]
             
             for service_name in expected_services:
@@ -310,7 +276,7 @@ class DorziCompleteTest(unittest.TestCase):
                 self.assertTrue(service_element.is_displayed())
                 print(f"✓ Service '{service_name}' is displayed")
             
-            # Test Learn More links
+
             learn_more_links = self.driver.find_elements(By.XPATH, "//a[contains(text(), 'Learn More →')]")
             self.assertGreaterEqual(len(learn_more_links), 2, "Expected Learn More links")
             
@@ -334,28 +300,23 @@ class DorziCompleteTest(unittest.TestCase):
         start_time = time.time()
         
         try:
-            # Scroll to tailors section
             self.driver.execute_script("window.scrollTo(0, 1200);")
             time.sleep(2)
             
-            # Check section heading
             featured_heading = self.wait.until(
                 EC.presence_of_element_located((By.XPATH, "//h1[contains(text(), 'Featured Tailors')]"))
             )
             self.assertTrue(featured_heading.is_displayed())
             print("✓ Featured Tailors heading is displayed")
             
-            # Check tailor cards
             tailor_cards = self.driver.find_elements(By.CLASS_NAME, "tailor-card")
             
             if tailor_cards:
                 print(f"✓ Found {len(tailor_cards)} tailor cards")
                 
-                # Test first tailor card
                 first_card = tailor_cards[0]
                 self.scroll_to_element(first_card)
                 
-                # Check card elements
                 card_elements = [
                     (".//h3", "Tailor Name"),
                     (".//img", "Profile Image"),
